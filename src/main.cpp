@@ -10,6 +10,60 @@ using namespace cv;
 using namespace std;
 using namespace nanoflann;
 
+vector<string> split(string input, char delimiter) {
+    vector<string> answer;
+    stringstream ss(input);
+    string temp;
+ 
+    while (getline(ss, temp, delimiter)) {
+        answer.push_back(temp);
+    }
+ 
+    return answer;
+}
+
+void readDataFromFileCustom( std::string filepath, PointCloud<double> &cloud )
+{
+	cloud.pts.reserve(10000000);
+	cout<<"Reading data ..."<<endl;
+
+	// 1. read in point data
+	std::ifstream ptReader( filepath );
+	std::vector<cv::Point3d> lidarPoints;
+	double x = 0, y = 0, z = 0, color = 0;
+	double nx, ny, nz;
+	int a = 0, b = 0, c = 0; 
+	int labelIdx = 0;
+	int count = 0;
+	int countTotal = 0;
+	int skip_index = 0;
+	if( ptReader.is_open() )
+	{
+		cout << "file opened."<<endl;
+		std::string line;
+		
+		while (std::getline(ptReader,line)) 
+		{
+			if(skip_index < 11)
+			{				
+				skip_index++;
+				continue;
+			}
+			//cout << line<<endl;;
+			std::vector<std::string> result = split(line, ' ');
+			x = std::stod(result[0]);
+			y = std::stod(result[1]);
+			z = std::stod(result[2]);
+			//cout << "converted: " << x << ", " << y << ", "<< z <<endl;;
+			cloud.pts.push_back(PointCloud<double>::PtData(x,y,z));
+
+		}
+		ptReader.close();
+	}
+
+	std::cout << "Total num of points: " << cloud.pts.size() << "\n";	
+}
+
 void readDataFromFile( std::string filepath, PointCloud<double> &cloud )
 {
 	cloud.pts.reserve(10000000);
@@ -42,7 +96,7 @@ void readDataFromFile( std::string filepath, PointCloud<double> &cloud )
 		ptReader.close();
 	}
 
-	std::cout << "Total num of points: " << cloud.pts.size() << "\n";
+	std::cout << "Total num of points: " << cloud.pts.size() << "\n";	
 }
 
 void writeOutPlanes( string filePath, std::vector<PLANE> &planes, double scale )
@@ -112,14 +166,16 @@ void writeOutLines( string filePath, std::vector<std::vector<cv::Point3d> > &lin
 }
 
 
-void main() 
+int main() 
 {
-	string fileData = "D://Facade//data.txt";
-	string fileOut  = "D://Facade//data";
+	string fileData = "cloudGlobal.pcd";
+	string fileOut  = "output";
 
 	// read in data
 	PointCloud<double> pointData; 
-	readDataFromFile( fileData, pointData );
+	
+	readDataFromFileCustom( fileData, pointData );
+	//readDataFromFile( fileData, pointData );
 
 	int k = 20;
 	LineDetection3D detector;
@@ -132,4 +188,5 @@ void main()
 	
 	writeOutPlanes( fileOut, planes, detector.scale );
 	writeOutLines( fileOut, lines, detector.scale );
+	return 0;
 }
