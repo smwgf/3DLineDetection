@@ -22,7 +22,7 @@ vector<string> split(string input, char delimiter) {
     return answer;
 }
 
-void readDataFromFileCustom( std::string filepath, PointCloud<double> &cloud )
+void readDataFromFileCustom( std::string filepath, PointCloud<double> &cloud, int skip_lines)
 {
 	cloud.pts.reserve(10000000);
 	cout<<"Reading data ..."<<endl;
@@ -44,7 +44,7 @@ void readDataFromFileCustom( std::string filepath, PointCloud<double> &cloud )
 		
 		while (std::getline(ptReader,line)) 
 		{
-			if(skip_index < 11)
+			if(skip_index < skip_lines)
 			{				
 				skip_index++;
 				continue;
@@ -166,15 +166,31 @@ void writeOutLines( string filePath, std::vector<std::vector<cv::Point3d> > &lin
 }
 
 
-int main() 
+int main(int argc, char* argv[]) 
 {
-	string fileData = "cloudGlobal.pcd";
-	string fileOut  = "output";
+	int skip_lines = 11;
+	if(argc < 3)
+	{
+		cout<<"please command {input path} {output path prefix} {skip line}(default 11)"<<endl;
+		return -1;
+	}
+	//string fileData = "cloudGlobal.pcd";
+	//string fileOut  = "output";
+	string fileData(argv[1]);
+	string fileOut(argv[2]);
+	cout << "input: " << fileData <<endl;
+	cout << "output prefix: " << fileOut <<endl;
 
+	if(argc >=4 )
+	{
+		skip_lines = std::atoi(argv[3]);
+	}
+	cout << "skip lines: " << skip_lines <<endl;
+	
 	// read in data
 	PointCloud<double> pointData; 
 	
-	readDataFromFileCustom( fileData, pointData );
+	readDataFromFileCustom( fileData, pointData , skip_lines);
 	//readDataFromFile( fileData, pointData );
 
 	int k = 20;
